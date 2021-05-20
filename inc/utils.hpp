@@ -11,6 +11,9 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
+#include  <Eigen/Core>
+#include <Eigen/Eigenvalues> 
+
 class Vector_3D{
 	public: Vector_3D():x(0),y(0),z(0){};
 	public: Vector_3D(pcl::PointXYZRGB c):x(0),y(0),z(0){
@@ -45,6 +48,8 @@ class Vector_3D{
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr transform_rgb(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
 
 Vector_3D get_normal(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<int> indices, pcl::PointXYZRGB c);
+
+Vector_3D get_normal_pca(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<int> indices, pcl::PointXYZRGB c);
 
 std::vector<std::vector<int>> SymNeighbors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, int k);
 

@@ -45,7 +45,8 @@ void Weighted_average::sym_weighted_avg(pcl::PointCloud<pcl::PointXYZRGB>::Ptr c
 	std::vector<std::vector<int>> neighborhood = SymNeighbors(cloud, k);
 	
 	for (int i = 0; i < neighborhood.size(); ++i){
-		Vector_3D n = get_normal(cloud, neighborhood[i], cloud.get()->points[i]);
+		Vector_3D n = get_normal_pca(cloud, neighborhood[i], cloud.get()->points[i]);
+		n = get_normal(cloud, neighborhood[i], cloud.get()->points[i]);///////////////////////
 		
 		pcl::PointXYZRGB p = (*cloud)[i];
 		pcl::PointXYZRGB c = neighbourhood_centroid_proj(cloud, neighborhood[i], n);
