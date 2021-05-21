@@ -24,4 +24,4 @@ target_link_libraries(bdr_angle pcl_utils)
 target_link_libraries(bdr_weighted_avg pcl_utils)
 
 add_executable (test_pcl main.cpp)
-target_link_libraries(test_pcl ${PCL_LIBRARIES} bdr_weighted_avg pcl_utils)
+target_link_libraries(test_pcl ${PCL_LIBRARIES} bdr_weighted_avg bdr_angle pcl_utils)

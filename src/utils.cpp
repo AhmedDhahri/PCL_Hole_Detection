@@ -88,13 +88,19 @@ Vector_3D get_normal_pca(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vect
 	double lambda_2 = eval(1).real();
 	double lambda_3 = eval(2).real();
 	if((lambda_1 <= lambda_2) && (lambda_1 <= lambda_3)){
-		vec_n.x = evec(0,0).real();vec_n.y = evec(1,0).real();vec_n.z = evec(2,0).real();
+		vec_n.x = evec(0,0).real();
+		vec_n.y = evec(1,0).real();
+		vec_n.z = evec(2,0).real();
 	}
 	else if((lambda_2 <= lambda_1) && (lambda_2 <= lambda_3)){
-		vec_n.x = evec(0,1).real();vec_n.y = evec(1,1).real();vec_n.z = evec(2,1).real();
+		vec_n.x = evec(0,1).real();
+		vec_n.y = evec(1,1).real();
+		vec_n.z = evec(2,1).real();
 	}
 	else if((lambda_3 <= lambda_2) && (lambda_3 <= lambda_1)){
-		vec_n.x = evec(0,2).real();vec_n.y = evec(1,2).real();vec_n.z = evec(2,2).real();
+		vec_n.x = evec(0,2).real();
+		vec_n.y = evec(1,2).real();
+		vec_n.z = evec(2,2).real();
 	}
 	return vec_n/vec_n.norm();
 }

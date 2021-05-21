@@ -2,6 +2,7 @@
 #include "bdr_weighted_avg.hpp"
 #include "bdr_angle.hpp"
 
+
 int main (){
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
 	if (pcl::io::loadPCDFile<pcl::PointXYZ> ("model.pcd", *cloud) == -1){
@@ -10,7 +11,8 @@ int main (){
 	}
 	Weighted_average wa;
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb = transform_rgb(cloud);
-	wa.sym_weighted_avg(cloud_rgb);//---------------------------//
+	//wa.sym_weighted_avg(cloud_rgb);//---------------------------//
+	sym_angle(cloud_rgb);//---------------------------//
 	pcl::visualization::PCLVisualizer viewer("PCL TEST");
 	viewer.setBackgroundColor(0.0, 0.0, 0.0);
 	viewer.setCameraPosition(0, 0, 0, 0, 0, 1, 0, -1, 0);
@@ -23,7 +25,6 @@ int main (){
 		viewer.spinOnce ();
 		pcl_sleep(0.017);
 	}
-
 	return (0);
 }
 
