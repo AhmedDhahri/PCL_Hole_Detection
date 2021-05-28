@@ -1,22 +1,26 @@
 #include "bdr_angle.hpp"
 
-void sym_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud){
-	int k = 40;
-
+std::vector<int> sym_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<std::vector<int>> neighborhood){
+	
 	std::vector<int> bdr;
-	std::vector<std::vector<int>> neighborhood = SymNeighbors(cloud, k);
 	
 	for (int i = 0; i < neighborhood.size(); ++i){
+		auto start_time = std::chrono::high_resolution_clock::now();
 		Vector_3D n = get_normal(cloud, neighborhood[i], cloud.get()->points[i]);
+		float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
+		std::cout<<time<<std::endl;
+		
 		
 		pcl::PointXYZRGB c = cloud.get()->points[i];
 		float angle = max_angle(cloud, neighborhood[i], n);
-		if (angle > 2){
-			cloud.get()->points[i].r = 255;
-			cloud.get()->points[i].g = 99;
-			cloud.get()->points[i].b = 71;
+		if (angle > 3.0){
+			bdr.push_back(i);
+			cloud.get()->points[i].r = 30;
+			cloud.get()->points[i].g = 192;
+			cloud.get()->points[i].b = 0;
 		}
 	}
+	return bdr;
 }
 
 double max_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<int> indices, Vector_3D n){
@@ -32,7 +36,7 @@ double max_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<int> 
 	Vector_3D v(n.y*u.z-n.z*u.y,
 				n.z*u.x-n.x*u.z,
 				n.x*u.y-n.y*u.x);//ord
-				
+	v = v / v.norm();
 	std::vector<double> angles;
 	for (int i = 2; i < indices.size(); ++i){
 		Vector_3D a((cloud.get()->points[indices[i]].x - cloud.get()->points[indices[0]].x),
@@ -44,7 +48,7 @@ double max_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<int> 
 		
 		
 		double angle = acos(dot_prod_u/std::sqrt(std::pow(dot_prod_u, 2) + std::pow(dot_prod_v, 2)));
-		if(dot_prod_v < 0)angle += PI;
+		if(dot_prod_v < 0)angle = 2 * PI -angle;
 		angles.push_back(angle);
 	}
 	sort(angles.begin(), angles.end());

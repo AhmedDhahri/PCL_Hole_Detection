@@ -165,7 +165,7 @@ pcl::PointXYZRGB neighbourhood_centroid_proj(pcl::PointCloud<pcl::PointXYZRGB>::
 		Vector_3D v = Vector_3D(p.x - n.center.x, p.y - n.center.y, p.z - n.center.z);
 		float dot_prod = v.x * n.x + v.y * n.y + v.z * n.z;
 		
-		x += p.x - n.x * dot_prod;//no good concept : always substract the same amount of 3d componment.
+		x += p.x - n.x * dot_prod;
 		y += p.y - n.y * dot_prod;
 		z += p.z - n.z * dot_prod;
 	}
@@ -175,4 +175,8 @@ pcl::PointXYZRGB neighbourhood_centroid_proj(pcl::PointCloud<pcl::PointXYZRGB>::
 
 float SquaredDistance(pcl::PointXYZRGB p1, pcl::PointXYZRGB p2){
 	return std::sqrt(pow((p1.x - p2.x), 2) + pow((p1.y - p2.y), 2) + pow((p1.z - p2.z), 2));
+}
+
+void make_graph(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc, std::vector<int> bdr_wavg, std::vector<int> bdr_angl){
+	
 }

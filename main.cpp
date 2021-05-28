@@ -9,10 +9,15 @@ int main (){
 	PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
 	return (-1);
 	}
-	Weighted_average wa;
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb = transform_rgb(cloud);
-	//wa.sym_weighted_avg(cloud_rgb);//---------------------------//
-	sym_angle(cloud_rgb);//---------------------------//
+	
+	
+	
+	std::vector<std::vector<int>> neighborhood = SymNeighbors(cloud_rgb, 30);
+	std::vector<int> bdr_wavg = sym_weighted_avg(cloud_rgb, neighborhood);//---------------------------//
+	std::vector<int> bdr_angl = sym_angle(cloud_rgb, neighborhood);//---------------------------//
+	
+	
 	pcl::visualization::PCLVisualizer viewer("PCL TEST");
 	viewer.setBackgroundColor(0.0, 0.0, 0.0);
 	viewer.setCameraPosition(0, 0, 0, 0, 0, 1, 0, -1, 0);
