@@ -29,21 +29,24 @@ double max_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, Point_info pi){
 	u.z = u.z - pi.normal.z * dot_prod_u;
 	u = u / u.norm();
 	
-	Vector_3D v(pi.normal.y*u.z-pi.normal.z*u.y,
-				pi.normal.z*u.x-pi.normal.x*u.z,
-				pi.normal.x*u.y-pi.normal.y*u.x);//ord
+	Vector_3D v(pi.normal.y*u.z - pi.normal.z*u.y,
+				pi.normal.z*u.x - pi.normal.x*u.z,
+				pi.normal.x*u.y - pi.normal.y*u.x);//ord
 	v = v / v.norm();
 	std::vector<double> angles;
 	for (int i = 2; i < pi.neighbourhood.size(); ++i){
-		Vector_3D a((cloud.get()->points[pi.neighbourhood[i]].x - cloud.get()->points[pi.neighbourhood[0]].x),
-					(cloud.get()->points[pi.neighbourhood[i]].y - cloud.get()->points[pi.neighbourhood[0]].y),
-					(cloud.get()->points[pi.neighbourhood[i]].z - cloud.get()->points[pi.neighbourhood[0]].z));
 					
-		float dot_prod_u = a.x * u.x + a.y * u.y + a.z * u.z;
-		float dot_prod_v = a.x * v.x + a.y * v.y + a.z * v.z;
+		float dot_prod_u = 	(cloud.get()->points[pi.neighbourhood[i]].x - cloud.get()->points[pi.neighbourhood[0]].x) * u.x + 
+							(cloud.get()->points[pi.neighbourhood[i]].y - cloud.get()->points[pi.neighbourhood[0]].y) * u.y + 
+							(cloud.get()->points[pi.neighbourhood[i]].z - cloud.get()->points[pi.neighbourhood[0]].z) * u.z;
+							
+							
+		float dot_prod_v = 	(cloud.get()->points[pi.neighbourhood[i]].x - cloud.get()->points[pi.neighbourhood[0]].x) * v.x + 
+							(cloud.get()->points[pi.neighbourhood[i]].y - cloud.get()->points[pi.neighbourhood[0]].y) * v.y + 
+							(cloud.get()->points[pi.neighbourhood[i]].z - cloud.get()->points[pi.neighbourhood[0]].z) * v.z;
 		
 		
-		double angle = acos(dot_prod_u/std::sqrt(std::pow(dot_prod_u, 2) + std::pow(dot_prod_v, 2)));
+		double angle = acos(dot_prod_u/std::sqrt(dot_prod_u*dot_prod_u + dot_prod_v*dot_prod_v));
 		if(dot_prod_v < 0)angle = 2 * PI -angle;
 		angles.push_back(angle);
 	}
