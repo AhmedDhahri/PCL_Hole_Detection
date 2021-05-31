@@ -1,19 +1,23 @@
-int main(){
+#include "kruskal_mst.hpp"
+
+float fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<int> bdr_wavg, std::vector<int> bdr_angl, std::vector<int> neighborhood){
 	
 	
-	return 0;
+	
+	return 0.0;
 }
-int Graph::kruskalMST(){
-    int mst_wt = 0; // Initialize result
+
+float Graph::kruskalMST(int n){
+    float mst_wt = 0; // Initialize result
   
     // Sort edges in increasing order on basis of cost
     sort(edges.begin(), edges.end());
   
     // Create disjoint sets
-    DisjointSets ds(V);
+    DisjointSets ds(n);
   
     // Iterate through all sorted edges
-    vector< pair<int, iPair> >::iterator it;
+    iTriple::iterator it;
     for (it=edges.begin(); it!=edges.end(); it++)
     {
         int u = it->second.first;

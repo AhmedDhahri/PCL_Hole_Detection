@@ -1,38 +1,32 @@
-#include <bits/stdc++.h>
+#pragma once 
+#include "utils.hpp"
 
-using namespace std;
   
-// Creating shortcut for an integer pair
-typedef  pair<int, int> iPair;
+typedef  std::vector< std::pair<float, std::pair<int, int>> > iTriple;
   
-// Structure to represent a graph
 struct Graph{
-    vector< pair<int, iPair> > edges;
+	 iTriple edges;
 
-    // Utility function to add an edge
-    void addEdge(int u, int v, int w){
-        edges.push_back({w, {u, v}});
-    }
+	//add an edge
+	void addEdge(int u, int v, int w){
+		edges.push_back({w, {u, v}});
+	}
   
-    // Function to find MST using Kruskal's
-    // MST algorithm
-    int kruskalMST();
+	//MST algorithm
+	float kruskalMST(int n);
 };
   
 // To represent Disjoint Sets
 struct DisjointSets{
     int *parent, *rnk;
-    int n;
-  
+	int n;
     // Constructor.
     DisjointSets(int n){
-        // Allocate memory
         this->n = n;
         parent = new int[n+1];
         rnk = new int[n+1];
   
-        // Initially, all vertices are in
-        // different sets and have rank 0.
+		// Initially, all vertices are in different sets and have rank 0.
         for (int i = 0; i <= n; i++){
             rnk[i] = 0;
   
@@ -66,3 +60,4 @@ struct DisjointSets{
             rnk[y]++;
     }
 };
+float fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<int> bdr_wavg, std::vector<int> bdr_angl, std::vector<int> neighborhood);

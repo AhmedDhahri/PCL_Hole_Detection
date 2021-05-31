@@ -13,10 +13,19 @@ int main (){
 	
 	
 	
-	std::vector<std::vector<int>> neighborhood = SymNeighbors(cloud_rgb, 30);
-	std::vector<int> bdr_wavg = sym_weighted_avg(cloud_rgb, neighborhood);//---------------------------//
-	std::vector<int> bdr_angl = sym_angle(cloud_rgb, neighborhood);//---------------------------//
+	auto start_time = std::chrono::high_resolution_clock::now();
 	
+	std::vector<Point_info> neighborhood = SymNeighbors(cloud_rgb, 20);
+	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
+	std::cout<<time<<std::endl;
+	
+	sym_weighted_avg(cloud_rgb, neighborhood, 0.5);//---------------------------//
+	time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
+	std::cout<<time<<std::endl;
+	
+	sym_angle(cloud_rgb, neighborhood, 0.95);//---------------------------//
+	time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
+	std::cout<<time<<std::endl;
 	
 	pcl::visualization::PCLVisualizer viewer("PCL TEST");
 	viewer.setBackgroundColor(0.0, 0.0, 0.0);
