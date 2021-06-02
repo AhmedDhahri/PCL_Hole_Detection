@@ -173,6 +173,7 @@ Array_saver::Array_saver(std::string path){
 	this->path = path;
 }
 
+//Dump point array data from hard drive
 void Array_saver::dump(std::vector<Point_info> pi_array){
 	std::cout<<"Point array dumping..."<<std::endl;
 	auto start_time = std::chrono::high_resolution_clock::now();
@@ -245,6 +246,7 @@ void Array_saver::dump(std::vector<Point_info> pi_array){
 	std::cout<<"Point array dumping finished in: "<<std::endl<<"---------> "<<time<<" s"<<std::endl;
 }
 
+//Load point array data from hard drive
 void Array_saver::load(std::vector<Point_info>& pi_array){
 	std::cout<<"Point array loading..."<<std::endl;
 	auto start_time = std::chrono::high_resolution_clock::now();
