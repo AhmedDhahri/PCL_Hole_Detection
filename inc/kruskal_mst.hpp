@@ -1,63 +1,37 @@
 #pragma once 
 #include "utils.hpp"
-
+#include <iterator>
+#include <set>
   
+
 typedef  std::vector< std::pair<float, std::pair<int, int>> > iTriple;
   
 struct Graph{
-	 iTriple edges;
-
+	iTriple edges;
+	iTriple edges_kruskal;
+	float mst_wt;
 	//add an edge
-	void addEdge(int u, int v, int w){
-		edges.push_back({w, {u, v}});
-	}
+	void addEdge(int u, int v, float w);
   
 	//MST algorithm
-	float kruskalMST(int n);
+	struct DisjointSets kruskalMST(int n);
 };
-  
+
 // To represent Disjoint Sets
 struct DisjointSets{
-    int *parent, *rnk;
+    std::vector<int> parent, rnk;
 	int n;
     // Constructor.
-    DisjointSets(int n){
-        this->n = n;
-        parent = new int[n+1];
-        rnk = new int[n+1];
-  
-		// Initially, all vertices are in different sets and have rank 0.
-        for (int i = 0; i <= n; i++){
-            rnk[i] = 0;
-  
-            //every element is parent of itself
-            parent[i] = i;
-        }
-    }
+    DisjointSets(int n);
 
     // Find the parent of a node 'u'
     // Path Compression
-    int find(int u){
-        /* Make the parent of the nodes in the path
-           from u--> parent[u] point to parent[u] */
-        if (u != parent[u])
-            parent[u] = find(parent[u]);
-        return parent[u];
-    }
+    int find(int u);
   
     // Union by rank
-	void merge(int x, int y){
-        x = find(x), y = find(y);
-  
-        /* Make tree with smaller height
-           a subtree of the other tree  */
-        if (rnk[x] > rnk[y])
-            parent[y] = x;
-        else // If rnk[x] <= rnk[y]
-            parent[x] = y;
-  
-        if (rnk[x] == rnk[y])
-            rnk[y]++;
-    }
+	void merge(int x, int y);
+	
+	void color_sets(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<Point_info>& pi_array);
 };
-float fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<int> bdr_wavg, std::vector<int> bdr_angl, std::vector<int> neighborhood);
+
+struct DisjointSets fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<Point_info>& pi_array, float min_cost, int min_neighboor_pt);

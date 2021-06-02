@@ -4,6 +4,6 @@
 
 
 
-void sym_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<Point_info> pi_array, float tolerance);
+void sym_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<Point_info>& pi_array, float tolerance);
 
-double max_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, Point_info pi);
+double max_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, Point_info& pi);

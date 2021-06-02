@@ -1,31 +1,64 @@
 #include "utils.hpp"
 #include "bdr_weighted_avg.hpp"
 #include "bdr_angle.hpp"
+#include "kruskal_mst.hpp"
 
+std::string path = "data.bin";
+int neighbourhood_size = 30;
+float wt_avg_prob_thresh = 0.50;
+float angle_prob_thresh = 1.0;
+float total_cost = 1.0;
+int min_union_in_neighbourhood = 2;
+bool dump_load;
 
-int main (){
+int main(int argc, char *argv[]){
+	
+	if((argv[1][0] == '-') && (argv[1][1] == 'l')){
+		std::cout<<"Border points array data will be loaded from hard drive."<<endl;
+		dump_load = false;
+	}
+	if((argv[1][0] == '-') && (argv[1][1] == 'd')){
+		std::cout<<"Border points array data will be dumped into hard drive."<<endl;
+		dump_load = true;
+	}
+	
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
 	if (pcl::io::loadPCDFile<pcl::PointXYZ> ("model.pcd", *cloud) == -1){
 	PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
 	return (-1);
 	}
+	Array_saver as(path);
+	float time;
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb = transform_rgb(cloud);
-	
-	
-	
 	auto start_time = std::chrono::high_resolution_clock::now();
+	//-----------------------------------------------------------------------------
+	std::vector<Point_info> pi_array;
+	if(!dump_load)
+		as.load(pi_array);
+	//-----------------------------------------------------------------------------
+	else{
+		pi_array = SymNeighbors(cloud_rgb, neighbourhood_size);
+		sym_weighted_avg(cloud_rgb, pi_array, wt_avg_prob_thresh);
+		sym_angle(cloud_rgb, pi_array, angle_prob_thresh);
+		as.dump(pi_array);
+	}
+	//-----------------------------------------------------------------------------
+	struct DisjointSets ds = fill_mst(cloud_rgb, pi_array, total_cost, min_union_in_neighbourhood);
 	
-	std::vector<Point_info> neighborhood = SymNeighbors(cloud_rgb, 20);
-	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
-	std::cout<<time<<std::endl;
 	
-	sym_weighted_avg(cloud_rgb, neighborhood, 0.5);//---------------------------//
-	time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
-	std::cout<<time<<std::endl;
-	
-	sym_angle(cloud_rgb, neighborhood, 0.95);//---------------------------//
-	time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
-	std::cout<<time<<std::endl;
+	long max_rnk = 0;
+	long index = 0;
+	for(long i=0;i<ds.rnk.size();i++){
+		
+		//if(ds.rnk[i] != 0)std::cout<<ds.rnk[i]<<" ";
+		if(ds.rnk[i] > max_rnk){
+			max_rnk = ds.rnk[i];
+			index = i;
+		}
+	}
+	//std::cout<<std::endl;
+	std::cout<<"Index "<<index<<" rank in the graph is "<<max_rnk<<std::endl;
+	//-----------------------------------------------------------------------------
 	
 	pcl::visualization::PCLVisualizer viewer("PCL TEST");
 	viewer.setBackgroundColor(0.0, 0.0, 0.0);
