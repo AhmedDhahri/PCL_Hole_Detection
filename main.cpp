@@ -2,6 +2,7 @@
 #include "bdr_weighted_avg.hpp"
 #include "bdr_angle.hpp"
 #include "kruskal_mst.hpp"
+#include "surface_calculation.hpp"
 
 std::string path = "data.bin";
 int neighbourhood_size = 30;
