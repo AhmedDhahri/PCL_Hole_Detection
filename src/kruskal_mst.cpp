@@ -7,7 +7,7 @@ struct DisjointSets fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::
 	struct Graph g;
 	
 	for(Point_info& pi : pi_array){
-		
+		pi.child_index = -1;
 		if(pi.wa && pi.ag){
 #ifdef DEBUG
 			(*cloud)[pi.index].r = 255;
@@ -59,19 +59,26 @@ struct DisjointSets fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::
 		}
 	}
 
-	std::cout<<"Total graph vertecies: "<<border_pts<<std::endl;
-	std::cout<<"Total graph edges: "<<g.edges.size()<<std::endl;
-	struct DisjointSets ds = g.kruskalMST(pi_array.size());
-	std::cout<<"Graph weight: "<<g.mst_wt<<std::endl;
-	ds.color_sets(cloud, pi_array);
+	std::cout<<"\tTotal graph vertecies: "<<border_pts<<std::endl;
+	std::cout<<"\tTotal graph edges: "<<g.edges.size()<<std::endl;
+	struct DisjointSets ds = g.kruskalMST(pi_array.size(), pi_array);
+	std::cout<<"\tGraph weight: "<<g.mst_wt<<std::endl;
+	
+	
+	
+	
+	
 	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
 	std::cout<<"Graph tree building finished in: "<<std::endl<<"---------> "<<time<<" s"<<std::endl;
+	
+	
 	return ds;
 }
 
-struct DisjointSets Graph::kruskalMST(int n){
+struct DisjointSets Graph::kruskalMST(int n, std::vector<Point_info>& pi_array){
 	// Initialize result
      mst_wt = 0;
+     mst_edges = 0;
      
 	// Sort edges in increasing order on basis of cost
 	sort(edges.begin(), edges.end());
@@ -97,24 +104,21 @@ struct DisjointSets Graph::kruskalMST(int n){
 			ds.merge(set_u, set_v);
 			// Update MST weight
 			mst_wt += it->first;
+			mst_edges++;
 			
-			edges_kruskal.push_back(*it);
+			
+			pi_array[u].kruskal_neighbours.push_back(v);
+			pi_array[v].kruskal_neighbours.push_back(u);
 		}
 	}
 	
-	std::set<int, std::greater<int> > parent_set;
 	for(int x : ds.parent){
 		int p = ds.find(x);
 		if(p != x)
-			parent_set.insert(p);
+			ds.parent_set.insert(p);
 	}
 	
-	std::cout<<"The "<<parent_set.size()<<" set are: ";
-	std::set<int, std::greater<int> >::iterator itr;
-    for (itr = parent_set.begin(); itr != parent_set.end(); itr++)
-        std::cout << *itr<<" ";
-    std::cout << std::endl;
-    std::cout<<"Kruskal MST edges: "<<edges_kruskal.size()<<std::endl;
+    std::cout<<"\tKruskal MST edges: "<<mst_edges<<std::endl;
     
 	
 	return ds;
@@ -159,40 +163,135 @@ void DisjointSets::merge(int x, int y){// Union by rank
 }
 
 void DisjointSets::color_sets(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<Point_info>& pi_array){
-	//94580 84123 83412 35381 21057
+	std::set<int, std::greater<int>>::iterator itr;
+	std::vector<Vector_3D> color_array;
+	
+	color_array.push_back(Vector_3D(255, 0, 0));
+	color_array.push_back(Vector_3D(0, 255, 0));
+	color_array.push_back(Vector_3D(0, 0, 255));
+	color_array.push_back(Vector_3D(255, 0, 255));
+	color_array.push_back(Vector_3D(255, 255, 0));
+	color_array.push_back(Vector_3D(0, 255, 255));
+	color_array.push_back(Vector_3D(255, 255, 255));
+	
+	for(itr=parent_set.begin();itr!=parent_set.end();itr++){
+		std::vector<int> vec;
+		set_points[*itr] = vec;
+	}
+	
 	for(Point_info& pi : pi_array){
 		int s = find(pi.index);
-		switch(s){
-			case 94580:
-				(*cloud)[pi.index].r = 255;
-				(*cloud)[pi.index].g = 0;
-				(*cloud)[pi.index].b = 0;
-				break;
-			case 84123:
-				(*cloud)[pi.index].r = 0;
-				(*cloud)[pi.index].g = 255;
-				(*cloud)[pi.index].b = 0;
-				break;
-			case 83412:
-				(*cloud)[pi.index].r = 0;
-				(*cloud)[pi.index].g = 0;
-				(*cloud)[pi.index].b = 255;
-				break;
-			case 35381:
-				(*cloud)[pi.index].r = 255;
-				(*cloud)[pi.index].g = 255;
-				(*cloud)[pi.index].b = 0;
-				break;
-			case 21057:
-				(*cloud)[pi.index].r = 255;
-				(*cloud)[pi.index].g = 0;
-				(*cloud)[pi.index].b = 255;
-				break;
-			default:
-				(*cloud)[pi.index].r = 150;
-				(*cloud)[pi.index].g = 150;
-				(*cloud)[pi.index].b = 150;
-				break;
+		int i=0;
+		for(itr=parent_set.begin();itr!=parent_set.end();itr++){
+			if(s == *itr){
+				set_points[s].push_back(pi.index);
+				(*cloud)[pi.index].r = color_array[i].x;
+				(*cloud)[pi.index].g = color_array[i].y;
+				(*cloud)[pi.index].b = color_array[i].z;
+			}
+			i++;
 		}
 	}
+	
+	std::set<int, std::greater<int> >::iterator it;
+    for (it = parent_set.begin(); it != parent_set.end(); it++)
+        std::cout<<"\t Set "<<*it<<" contains "<<set_points[*it].size()<<" points"<<std::endl;
+    std::cout << std::endl;
+}
+
+int assign_children(int set, std::vector<Point_info>& pi_array, int prev_set){
+	
+	if(pi_array[set].kruskal_neighbours.size() > 2){
+		std::vector<std::pair<int, int>> vect;
+		for(int i=0;i<pi_array[set].kruskal_neighbours.size();i++){
+			if(pi_array[set].kruskal_neighbours[i] != prev_set){
+				vect.push_back(std::make_pair(assign_children(pi_array[set].kruskal_neighbours[i], pi_array, set), 
+												pi_array[set].kruskal_neighbours[i]));
+			}
+		}
+		sort(vect.begin(), vect.end());
+		pi_array[set].child_index = vect[vect.size()-1].second;
+		return 1 + vect[vect.size()-1].first;
+	}
+	else if(pi_array[set].kruskal_neighbours.size() < 2)
+		return 1;
+	else if((pi_array[set].kruskal_neighbours[0] != prev_set) &&
+			(pi_array[set].kruskal_neighbours[1] == prev_set)){ // pi_array[set].kruskal_neighbours.size() == 2
+		pi_array[set].child_index = pi_array[set].kruskal_neighbours[0];
+		return 1 + assign_children(pi_array[set].kruskal_neighbours[0], pi_array, set);
+	}
+	else if((pi_array[set].kruskal_neighbours[1] != prev_set) &&
+			(pi_array[set].kruskal_neighbours[0] == prev_set)){ // pi_array[set].kruskal_neighbours.size() == 2
+		pi_array[set].child_index = pi_array[set].kruskal_neighbours[1];
+		return 1 + assign_children(pi_array[set].kruskal_neighbours[1], pi_array, set);
+	}
+	else{//maybe both do not equal to prev_set
+		int v1 = assign_children(pi_array[set].kruskal_neighbours[0], pi_array, set);
+		int v2 = assign_children(pi_array[set].kruskal_neighbours[1], pi_array, set);
+		if(v1 > v2){
+			pi_array[set].child_index = pi_array[set].kruskal_neighbours[0];
+			return 1 + v1;
+		}
+		else{
+			pi_array[set].child_index = pi_array[set].kruskal_neighbours[1];
+			return 1 + v2;
+		}
+	}
+}
+
+std::vector<int> get_chain(int set, std::vector<Point_info>& pi_array, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud){
+	std::vector<int> chain;
+	chain.push_back(set);
+
+
+	int branch_1 = pi_array[set].kruskal_neighbours[0];
+	int branch_2 = pi_array[set].kruskal_neighbours[1];
+	pi_array[set].kruskal_neighbours.clear();
+	
+	assign_children(branch_1, pi_array);
+	assign_children(branch_2, pi_array);
+	int iteration = 0;
+	int p_index = pi_array[branch_1].child_index;
+	while(iteration < pi_array.size()){
+		if(p_index != -1)
+			chain.push_back(p_index);
+		else
+			break;
+		p_index = pi_array[p_index].child_index;
+		iteration++;
+	}
+	
+	
+	iteration = 0;
+	p_index = pi_array[branch_2].child_index;
+	while(iteration < pi_array.size()){
+		if(p_index != -1)
+			chain.insert(chain.begin(), p_index);
+		else
+			break;
+		p_index = pi_array[p_index].child_index;
+		iteration++;
+	}
+	
+	return chain;
+}
+
+std::vector<std::pair<int, std::vector<int>>> get_set_points_array(DisjointSets ds, std::vector<Point_info>& pi_array, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud){
+	std::cout<<"Border point chain extraction..."<<std::endl;
+	auto start_time = std::chrono::high_resolution_clock::now();
+	
+	std::vector<std::pair<int, std::vector<int>>> border_chains;
+	
+	std::set<int, std::greater<int>>::iterator it;
+	for(it=ds.parent_set.begin();it!=ds.parent_set.end();it++){
+		
+		std::vector<int> chain = get_chain(*it, pi_array, cloud);
+		border_chains.push_back(std::make_pair(*it, chain));
+	}
+	
+	ds.color_sets(cloud, pi_array);
+	
+	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
+	std::cout<<"Border point chain extraction finished in: "<<std::endl<<"---------> "<<time<<" s"<<std::endl;
+	return border_chains;
 }

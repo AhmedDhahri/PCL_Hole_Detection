@@ -6,7 +6,7 @@
 std::string path = "data.bin";
 int neighbourhood_size = 30;
 float wt_avg_prob_thresh = 0.50;
-float angle_prob_thresh = 1.0;
+float angle_prob_thresh = 0.95;
 float total_cost = 1.0;
 int min_union_in_neighbourhood = 2;
 bool dump_load;
@@ -44,20 +44,7 @@ int main(int argc, char *argv[]){
 	}
 	//-----------------------------------------------------------------------------
 	struct DisjointSets ds = fill_mst(cloud_rgb, pi_array, total_cost, min_union_in_neighbourhood);
-	
-	
-	long max_rnk = 0;
-	long index = 0;
-	for(long i=0;i<ds.rnk.size();i++){
-		
-		//if(ds.rnk[i] != 0)std::cout<<ds.rnk[i]<<" ";
-		if(ds.rnk[i] > max_rnk){
-			max_rnk = ds.rnk[i];
-			index = i;
-		}
-	}
-	//std::cout<<std::endl;
-	std::cout<<"Index "<<index<<" rank in the graph is "<<max_rnk<<std::endl;
+	std::vector<std::pair<int, std::vector<int>>> a = get_set_points_array(ds, pi_array, cloud_rgb);
 	//-----------------------------------------------------------------------------
 	
 	pcl::visualization::PCLVisualizer viewer("PCL TEST");

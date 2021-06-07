@@ -43,6 +43,8 @@ typedef struct{
 		bool ag;
 		std::vector<int> neighbourhood;
 		std::vector<int> included_pts;
+		std::vector<int> kruskal_neighbours;
+		int child_index;
 		Vector_3D normal;
 }Point_info;
 	 
