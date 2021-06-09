@@ -252,7 +252,7 @@ void Array_saver::load(std::vector<Point_info>& pi_array){
 	auto start_time = std::chrono::high_resolution_clock::now();
 	std::ifstream file (path, ios::in|ios::binary);
 	if (file.is_open()){
-		std::cout << "File opened successfully."<<std::endl;
+		std::cout << "\tFile opened successfully."<<std::endl;
 		long s;char* buffer;
 		
 		//pi_array_size

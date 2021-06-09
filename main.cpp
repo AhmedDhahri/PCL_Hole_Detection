@@ -10,6 +10,11 @@ float wt_avg_prob_thresh = 0.50;
 float angle_prob_thresh = 0.95;
 float total_cost = 1.0;
 int min_union_in_neighbourhood = 2;
+
+float radius = 0.02;
+float resolution = 0.000001256;
+float lambda = 100;
+
 bool dump_load;
 
 int main(int argc, char *argv[]){
@@ -45,9 +50,12 @@ int main(int argc, char *argv[]){
 	}
 	//-----------------------------------------------------------------------------
 	struct DisjointSets ds = fill_mst(cloud_rgb, pi_array, total_cost, min_union_in_neighbourhood);
-	std::vector<std::pair<int, std::vector<int>>> a = get_set_points_array(ds, pi_array, cloud_rgb);
+	std::vector<std::pair<int, std::vector<int>>> set_points_array 
+													= get_set_points_array(ds, pi_array, cloud_rgb);
 	//-----------------------------------------------------------------------------
-	
+	std::vector<std::pair<int, float>> s = get_surface(cloud_rgb, set_points_array);
+	float surface = get_pcl_surface(cloud_rgb, radius, resolution, lambda);
+	//-----------------------------------------------------------------------------
 	pcl::visualization::PCLVisualizer viewer("PCL TEST");
 	viewer.setBackgroundColor(0.0, 0.0, 0.0);
 	viewer.setCameraPosition(0, 0, 0, 0, 0, 1, 0, -1, 0);

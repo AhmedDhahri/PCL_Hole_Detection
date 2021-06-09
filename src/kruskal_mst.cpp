@@ -65,9 +65,6 @@ struct DisjointSets fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::
 	std::cout<<"\tGraph weight: "<<g.mst_wt<<std::endl;
 	
 	
-	
-	
-	
 	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
 	std::cout<<"Graph tree building finished in: "<<std::endl<<"---------> "<<time<<" s"<<std::endl;
 	
