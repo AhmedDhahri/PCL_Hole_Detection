@@ -1,4 +1,4 @@
-#include "kruskal_mst.hpp"
+#include "uqtr_zone_coverage_evaluation/kruskal_mst.hpp"
 
 struct DisjointSets fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<Point_info>& pi_array, float min_cost, int min_neighboor_pt){
 	std::cout<<"Graph tree building..."<<std::endl;
@@ -63,7 +63,8 @@ struct DisjointSets fill_mst(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::
 	std::cout<<"\tTotal graph edges: "<<g.edges.size()<<std::endl;
 	struct DisjointSets ds = g.kruskalMST(pi_array.size(), pi_array);
 	std::cout<<"\tGraph weight: "<<g.mst_wt<<std::endl;
-	
+	std::cout<<"\tKruskal MST edges: "<<g.mst_edges<<std::endl;
+	std::cout<<"\tSets number: "<<ds.parent_set.size()<<std::endl;
 	
 	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
 	std::cout<<"Graph tree building finished in: "<<std::endl<<"---------> "<<time<<" s"<<std::endl;
@@ -114,9 +115,7 @@ struct DisjointSets Graph::kruskalMST(int n, std::vector<Point_info>& pi_array){
 		if(p != x)
 			ds.parent_set.insert(p);
 	}
-	
-    std::cout<<"\tKruskal MST edges: "<<mst_edges<<std::endl;
-    
+	    
 	
 	return ds;
 }
@@ -237,18 +236,23 @@ int assign_children(int set, std::vector<Point_info>& pi_array, int prev_set){
 }
 
 std::vector<int> get_chain(int set, std::vector<Point_info>& pi_array, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud){
+	
 	std::vector<int> chain;
+	std::vector<int> branches;
 	chain.push_back(set);
-
-
-	int branch_1 = pi_array[set].kruskal_neighbours[0];
-	int branch_2 = pi_array[set].kruskal_neighbours[1];
+	
+	
+	
+	for(int b : pi_array[set].kruskal_neighbours)
+		branches.push_back(b);
+		
 	pi_array[set].kruskal_neighbours.clear();
 	
-	assign_children(branch_1, pi_array);
-	assign_children(branch_2, pi_array);
+	for(int b : branches)
+		assign_children(b, pi_array);
+	
 	int iteration = 0;
-	int p_index = pi_array[branch_1].child_index;
+	int p_index = pi_array[branches[0]].child_index;
 	while(iteration < pi_array.size()){
 		if(p_index != -1)
 			chain.push_back(p_index);
@@ -258,9 +262,9 @@ std::vector<int> get_chain(int set, std::vector<Point_info>& pi_array, pcl::Poin
 		iteration++;
 	}
 	
-	
+	if(branches.size() < 2) return chain;
 	iteration = 0;
-	p_index = pi_array[branch_2].child_index;
+	p_index = pi_array[branches[1]].child_index;
 	while(iteration < pi_array.size()){
 		if(p_index != -1)
 			chain.insert(chain.begin(), p_index);

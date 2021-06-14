@@ -1,4 +1,4 @@
-#include "bdr_angle.hpp"
+#include "uqtr_zone_coverage_evaluation/bdr_angle.hpp"
 
 void sym_angle(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<Point_info>& pi_array, float tolerance){
 	std::cout<<"Angle critereon..."<<std::endl;

@@ -1,2 +1,2 @@
 cmake ..
-make -j6
+make -j12

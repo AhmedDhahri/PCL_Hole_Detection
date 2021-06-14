@@ -1,4 +1,4 @@
-#include "utils.hpp"
+#include "uqtr_zone_coverage_evaluation/utils.hpp"
 
 Vector_3D::Vector_3D():x(0),y(0),z(0){
 }
@@ -21,19 +21,36 @@ Vector_3D Vector_3D::operator /(float cst){
 	return *n;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr transform_rgb(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr transform_rgb(pcl::PointCloud<POINT_TYPE>::Ptr cloud){
+	
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb(new pcl::PointCloud<pcl::PointXYZRGB>);
+	
 	cloud_rgb->resize(cloud->size());
-	for (size_t i = 0; i < cloud->size(); i++) {
+	float x = 0, y = 0, z = 0;
+	for (size_t i = 0; i < cloud->size(); i++){
 		(*cloud_rgb)[i].x = (*cloud)[i].x;
 		(*cloud_rgb)[i].y = (*cloud)[i].y;
 		(*cloud_rgb)[i].z = (*cloud)[i].z;
-
+		
+		x += (*cloud)[i].x;
+		y += (*cloud)[i].y;
+		z += (*cloud)[i].z;
 		
 		(*cloud_rgb)[i].r = 30;
 		(*cloud_rgb)[i].g = 144;
 		(*cloud_rgb)[i].b = 255;
 	}
+	
+	x /= cloud->size();
+	y /= cloud->size();
+	z /= cloud->size();
+	
+	for (size_t i = 0; i < cloud->size(); i++){
+		(*cloud_rgb)[i].x -= x;
+		(*cloud_rgb)[i].y -= y;
+		(*cloud_rgb)[i].z -= z;
+	}
+	
 	return cloud_rgb;
 }
 

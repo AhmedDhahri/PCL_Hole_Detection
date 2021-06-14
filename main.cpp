@@ -1,10 +1,13 @@
-#include "utils.hpp"
-#include "bdr_weighted_avg.hpp"
-#include "bdr_angle.hpp"
-#include "kruskal_mst.hpp"
-#include "surface_calculation.hpp"
+#include "uqtr_zone_coverage_evaluation/utils.hpp"
+#include "uqtr_zone_coverage_evaluation/bdr_weighted_avg.hpp"
+#include "uqtr_zone_coverage_evaluation/bdr_angle.hpp"
+#include "uqtr_zone_coverage_evaluation/kruskal_mst.hpp"
+#include "uqtr_zone_coverage_evaluation/surface_calculation.hpp"
 
-std::string path = "data.bin";
+
+/*******************************************
+std::string model_path = "sim_test.pcd";
+std::string checkpoint_path = "data.bin";
 int neighbourhood_size = 30;
 float wt_avg_prob_thresh = 0.50;
 float angle_prob_thresh = 0.95;
@@ -14,11 +17,27 @@ int min_union_in_neighbourhood = 2;
 float radius = 0.02;
 float resolution = 0.000001256;
 float lambda = 100;
+*******************************************/
+
+std::string model_path = "sim_test.pcd";
+std::string checkpoint_path = "data.bin";
+int neighbourhood_size = 20;
+float wt_avg_prob_thresh = 0.50;
+float angle_prob_thresh = 0.9;
+float total_cost = 0.9;
+int min_union_in_neighbourhood = 2;
+
+int test_k = 5;
+int min_bdr = 3;
+float radius = 0.5;
+float resolution = 0.05;
+
 
 bool dump_load;
 
+
 int main(int argc, char *argv[]){
-	
+	//-----------------------------------------------------------------------------
 	if((argv[1][0] == '-') && (argv[1][1] == 'l')){
 		std::cout<<"Border points array data will be loaded from hard drive."<<endl;
 		dump_load = false;
@@ -27,16 +46,15 @@ int main(int argc, char *argv[]){
 		std::cout<<"Border points array data will be dumped into hard drive."<<endl;
 		dump_load = true;
 	}
-	
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-	if (pcl::io::loadPCDFile<pcl::PointXYZ> ("model.pcd", *cloud) == -1){
-	PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
-	return (-1);
+	Array_saver as(checkpoint_path);
+	//-----------------------------------------------------------------------------
+	pcl::PointCloud<POINT_TYPE>::Ptr cloud (new pcl::PointCloud<POINT_TYPE>);
+	if (pcl::io::loadPCDFile<POINT_TYPE> (model_path, *cloud) == -1){
+		PCL_ERROR ("Couldn't read file .pcd \n");
+		return (-1);
 	}
-	Array_saver as(path);
-	float time;
+	
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb = transform_rgb(cloud);
-	auto start_time = std::chrono::high_resolution_clock::now();
 	//-----------------------------------------------------------------------------
 	std::vector<Point_info> pi_array;
 	if(!dump_load)
@@ -50,15 +68,16 @@ int main(int argc, char *argv[]){
 	}
 	//-----------------------------------------------------------------------------
 	struct DisjointSets ds = fill_mst(cloud_rgb, pi_array, total_cost, min_union_in_neighbourhood);
-	std::vector<std::pair<int, std::vector<int>>> set_points_array 
+	std::vector<std::pair<int, std::vector<int>>> point_sets_array 
 													= get_set_points_array(ds, pi_array, cloud_rgb);
 	//-----------------------------------------------------------------------------
-	std::vector<std::pair<int, float>> s = get_surface(cloud_rgb, set_points_array);
-	float surface = get_pcl_surface(cloud_rgb, radius, resolution, lambda);
+	rm_out_border(cloud_rgb, point_sets_array, pi_array, test_k, min_bdr);
+	std::vector<std::pair<int, float>> s = get_hole_surface(cloud_rgb, point_sets_array);
+	float surface = get_pcl_surface(cloud_rgb, radius, resolution);
 	//-----------------------------------------------------------------------------
 	pcl::visualization::PCLVisualizer viewer("PCL TEST");
 	viewer.setBackgroundColor(0.0, 0.0, 0.0);
-	viewer.setCameraPosition(0, 0, 0, 0, 0, 1, 0, -1, 0);
+	viewer.setCameraPosition(0, 14, -14, 0, 0, 1, 0, -1, 0);
 	viewer.resetCamera();
 	viewer.setPosition(0, 0);
 	viewer.setSize(1280, 720);

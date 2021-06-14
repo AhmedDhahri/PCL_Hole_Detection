@@ -1,6 +1,42 @@
-#include "surface_calculation.hpp"
+#include "uqtr_zone_coverage_evaluation/surface_calculation.hpp"
 
-std::vector<std::pair<int, float>> get_surface(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<std::pair<int, std::vector<int>>> set_points_array){
+void rm_out_border(	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, 
+					std::vector<std::pair<int, std::vector<int>>>& set_points_array,
+					std::vector<Point_info> pi_array,
+					int k, int min_bdr){
+						
+	std::cout<<"Point chains sets filtering..."<<std::endl;
+	auto start_time = std::chrono::high_resolution_clock::now();
+						
+	for(auto i = set_points_array.begin();i != set_points_array.end();i++){
+		
+		pcl::PointXYZRGB p = get_center(cloud, i->second);
+		
+		std::cout<<"\tSet "<<i->first;
+		std::vector<int> indices;
+		std::vector<float> sqDistance;
+		pcl::KdTreeFLANN<pcl::PointXYZRGB> kdtree;
+		
+		kdtree.setInputCloud(cloud);
+		kdtree.nearestKSearch(p, k, indices, sqDistance);
+		int cnt = 0;
+		for(int index : indices){
+			if(pi_array[index].bdr)cnt++;
+		}
+		if(cnt <= min_bdr){//test if bdr in the same set
+			set_points_array.erase(i);
+			i--;
+			std::cout<<" removed";
+		}
+		std::cout<<" "<<cnt<<std::endl;
+	}
+	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
+	std::cout<<"Point chains sets filtering finished in: "<<std::endl<<"---------> "<<time<<" s"<<std::endl;
+}
+
+
+std::vector<std::pair<int, float>> get_hole_surface(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<std::pair<int, std::vector<int>>> set_points_array){
+	
 	std::cout<<"Hole surfaces calculation..."<<std::endl;
 	auto start_time = std::chrono::high_resolution_clock::now();
 	std::vector<std::pair<int, float>> set_surfaces;
@@ -13,7 +49,9 @@ std::vector<std::pair<int, float>> get_surface(pcl::PointCloud<pcl::PointXYZRGB>
 		Vector_3D u( (*cloud)[p.second[0]].x - center.x,
 					 (*cloud)[p.second[0]].y - center.y,
 					 (*cloud)[p.second[0]].z - center.z);
-		u = u / u.norm();
+		u = u / u.norm();// devide 0
+		if(u.norm() == 0)
+			std::cerr<<"\tDivide by 0 - Hole surfaces calculation"<<std::endl;
 		Vector_3D v(n.y * u.z - n.z * u.y,
 					n.z * u.x - n.x * u.z,
 					n.x * u.y - n.y * u.x);
@@ -47,7 +85,7 @@ std::vector<std::pair<int, float>> get_surface(pcl::PointCloud<pcl::PointXYZRGB>
 			xc_old = xc;
 		}
 		set_surfaces.push_back(std::make_pair(p.first, area));
-		std::cout<<"\tSet "<<p.first<<" Area: "<<area*10000<<" cm^2"<<std::endl;
+		std::cout<<"\tSet "<<p.first<<" Area: "<<area<<" m^2"<<std::endl;
 	}
 	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
 	std::cout<<"Hole surfaces calculation finished in: "<<std::endl<<"---------> "<<time<<" s"<<std::endl;
@@ -69,25 +107,25 @@ pcl::PointXYZRGB get_center(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::v
 	return p;
 }
 
-float get_pcl_surface(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, float radius, float resolution, float lambda){
+float get_pcl_surface(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, float radius, float resolution){
 	std::clog<<"Mapping surface calculation..."<<std::endl;
 	auto start_time = std::chrono::high_resolution_clock::now();
 	float surface = 0;
 	
-	int reg_inner_pt = (int)( radius * radius * PI / resolution);
+	int reg_inner_pt = (int)std::round( radius * radius * PI / resolution);
 	if(reg_inner_pt == 0) {
-		std::cerr<<"Radius too small or resolution too big !"<<std::endl;
+		std::cerr<<"\tRadius too small or resolution too big !"<<std::endl;
 		exit(0);
 	}
 	
 	std::vector<Surface_Info> si_array = radial_neighbors(cloud, radius);
 	avg_distance(cloud, si_array);
-	redundancy_factor(cloud, si_array, reg_inner_pt, lambda);
+	redundancy_factor(cloud, si_array, reg_inner_pt, radius);
 	
 	for(Surface_Info& si : si_array)
 		surface += resolution * si.f_redundancy;
 	
-	std::cout<<"\tMapping surface: "<<surface*10000<<" cm^2"<<std::endl;
+	std::cout<<"\tMapping surface: "<<surface<<" m^2"<<std::endl;
 	float time = ((std::chrono::duration<double>)(std::chrono::high_resolution_clock::now()-start_time)).count();
 	std::clog<<"Mapping surface calculation finished in: "<<std::endl<<"---------> "<<time<<" s"<<std::endl;
 	return surface;
@@ -126,8 +164,8 @@ void avg_distance(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::vector<Surf
 }
 
 void redundancy_factor(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, 
-					std::vector<Surface_Info>& si_array, int reg_inner_pt, float lambda){
-
+					std::vector<Surface_Info>& si_array, int reg_inner_pt, float radius){
+	float lambda = 1/ radius;
 	for(Surface_Info& si : si_array)
 		si.f_redundancy = reg_inner_pt / (si.neighbourhood.size() * (1 + lambda * si.avg_pt_dist));
 		//lambda * si.avg_pt_dist: this term is used to correct possible 

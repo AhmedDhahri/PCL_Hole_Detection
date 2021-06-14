@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-project(pcd_read)
+project(uqtr_zone_coverage_evaluation)
 
 find_package(PCL 1.2 REQUIRED)
 find_package(OpenCV 4.5 REQUIRED)
@@ -8,7 +8,7 @@ find_package (Eigen3 3.3 REQUIRED)
 
 include_directories(
   ${PCL_INCLUDE_DIRS}
-  inc)
+  include)
 
 link_directories(${PCL_LIBRARY_DIRS})
 
